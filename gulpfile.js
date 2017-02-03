@@ -33,7 +33,7 @@ gulp.task('build', ['build:vendor'], function() {
     .pipe(sourcemaps.init())
       .pipe(concat('qcode-decoder.min.js'))
       .pipe(uglify({mangle: true}))
-    .pipe(sourcemaps.write('./'))
+    .pipe(sourcemaps.write('./',{sourceMappingURLPrefix: '../Common/JS'}))
     .pipe(gulp.dest('build'));
 });
 

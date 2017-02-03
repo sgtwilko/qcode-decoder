@@ -241,7 +241,7 @@ function QRCodeDataBlockReader (blocks,  version,  numErrorCorrectionCode) {
             mode != MODE_8BIT_BYTE &&
             mode != MODE_KANJI) {
 
-          mode = guessMode(mode);
+          //mode = guessMode(mode);
           throw "Invalid mode: " + mode + " in (block:" + this.blockPointer + " bit:" + this.bitPointer + ")";
         }
 

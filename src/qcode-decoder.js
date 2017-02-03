@@ -19,6 +19,7 @@ function QCodeDecoder () {
   this.canvasElem = null;
   this.stream = null;
   this.videoConstraints = {video: true, audio: false};
+  this.capturing = null;
 }
 
 /**
@@ -109,10 +110,11 @@ QCodeDecoder.prototype._captureToCanvas = function (videoElem, cb, once) {
         cb(new Error(err));
     }
   }
-
-  this.timerCapture = setTimeout(function () {
-    this._captureToCanvas.call(this, videoElem, cb, once);
-  }.bind(this), 500);
+  if (this.capturing){
+    this.timerCapture = setTimeout(function () {
+      this._captureToCanvas.call(this, videoElem, cb, once);
+    }.bind(this), 500);
+  }
 };
 
 /**
@@ -129,6 +131,7 @@ QCodeDecoder.prototype._captureToCanvas = function (videoElem, cb, once) {
  */
 QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
   var scope = (this.stop(), this);
+  this.capturing=true;
 
   if (!this.hasGetUserMedia())
     cb(new Error('Couldn\'t get video from camera'));
@@ -148,6 +151,7 @@ QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
 };
 
 QCodeDecoder.prototype.decodeFromVideo = function (videoElem, cb, once) {
+  this.capturing=true;
   setTimeout(function () {
     this._captureToCanvas.call(this, videoElem, cb, once);
   }.bind(this), 500);
@@ -177,8 +181,13 @@ QCodeDecoder.prototype.decodeFromImage = function (img, cb) {
  * captured by prepareToVideo
  */
 QCodeDecoder.prototype.stop = function() {
+  this.capturing=false;
   if (this.stream) {
-    this.stream.stop();
+    if(this.stream.getTracks){
+      this.stream.getTracks().forEach(function (track) { track.stop(); });
+    } else if (this.stream.stop){
+      this.stream.stop();
+    }
     this.stream = undefined;
   }
 
@@ -222,17 +231,30 @@ QCodeDecoder.prototype.setSourceId = function (sourceId) {
 QCodeDecoder.prototype.getVideoSources = function (cb) {
   var sources = [];
 
-  if (!(MediaStreamTrack && MediaStreamTrack.getSources))
-    return cb(new Error('Current browser doest not support MediaStreamTrack.getSources'));
-
-  MediaStreamTrack.getSources(function (sourceInfos) {
-    sourceInfos.forEach(function(sourceInfo) {
-      if (sourceInfo.kind === 'video')
-        sources.push(sourceInfo);
+  if ((navigator) && (navigator.mediaDevices) && (navigator.mediaDevices.enumerateDevices)){
+  navigator.mediaDevices.enumerateDevices()
+    .then(function(devices) {
+      devices.forEach(function(sourceInfo) {
+        if (sourceInfo.kind === 'videoinput')
+          sources.push(sourceInfo);
+      });
+      cb(null, sources);
+    })
+    .catch(function(err) {
+      console.log(err.name + ": " + err.message);
+      return cb(new Error(err.name + ": " + err.message));
     });
-    cb(null, sources);
-  });
-
+  } else if ((MediaStreamTrack && MediaStreamTrack.getSources)) {
+     MediaStreamTrack.getSources(function (sourceInfos) {
+      sourceInfos.forEach(function(sourceInfo) {
+        if (sourceInfo.kind === 'video')
+          sources.push(sourceInfo);
+      });
+      cb(null, sources);
+    });
+  } else {
+    return cb(new Error('Current browser doest not support MediaStreamTrack.getSources'));
+  }
   return this;
 };
 

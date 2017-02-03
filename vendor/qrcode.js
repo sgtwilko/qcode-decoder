@@ -125,7 +125,7 @@ qrcode.decode_url = function (s)
 
 qrcode.decode_utf8 = function ( s )
 {
-    if(qrcode.isUrl(s))
+    if((qrcode.isUrl(s)) || (s.indexOf('﻿')==0))
         return qrcode.decode_url(s);
     else
         return s;
