@@ -131,7 +131,7 @@ QCodeDecoder.prototype._captureToCanvas = function (videoElem, cb, once) {
  */
 QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
   var scope = (this.stop(), this);
-  this.capturing=true;
+  var me=this;
 
   if (!this.hasGetUserMedia())
     cb(new Error('Couldn\'t get video from camera'));
@@ -141,6 +141,7 @@ QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
     scope.videoElem = videoElem;
     scope.stream = stream;
     scope.videoDimensions = false;
+    me.capturing=true;
 
     setTimeout(function () {
       scope._captureToCanvas.call(scope, videoElem, cb, once);
