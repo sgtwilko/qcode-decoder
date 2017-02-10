@@ -242,7 +242,6 @@ QCodeDecoder.prototype.getVideoSources = function (cb) {
       cb(null, sources);
     })
     .catch(function(err) {
-      console.log(err.name + ": " + err.message);
       return cb(new Error(err.name + ": " + err.message));
     });
   } else if ((MediaStreamTrack && MediaStreamTrack.getSources)) {
